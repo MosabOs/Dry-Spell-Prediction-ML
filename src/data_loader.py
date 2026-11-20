@@ -312,3 +312,56 @@ def load_and_standardize_datasets(directory):
         datasets[file_path.stem] = df
 
     return datasets
+
+
+
+def merge_datasets(datasets):
+    if not datasets:
+        raise ValueError("No datasets provided for merging.")
+
+    merged_df = None
+
+    for dataset_name, df in datasets.items():
+
+        if "date" not in df.columns:
+            raise ValueError(
+                f"Dataset '{dataset_name}' does not contain a date column."
+            )
+
+        if df["date"].duplicated().any():
+            raise ValueError(
+                f"Dataset '{dataset_name}' contains duplicate dates."
+            )
+
+        if merged_df is None:
+            merged_df = df.copy()
+            continue
+
+        # Check for overlapping feature names
+        overlapping_columns = (
+            set(merged_df.columns)
+            & set(df.columns)
+        ) - {"date"}
+
+        if overlapping_columns:
+            raise ValueError(
+                f"Duplicate columns found in '{dataset_name}': "
+                f"{overlapping_columns}"
+            )
+
+        # Merge while preserving all dates
+        merged_df = pd.merge(
+            merged_df,
+            df,
+            on="date",
+            how="outer",
+            validate="one_to_one"
+        )
+
+    merged_df = (
+        merged_df
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
+
+    return merged_df
