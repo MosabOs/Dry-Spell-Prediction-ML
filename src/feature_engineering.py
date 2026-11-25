@@ -54,7 +54,7 @@ def add_calendar_features(df):
 
     data = df.copy()
 
-    day_of_year = data["date"].dt.dayofyear
+    day_of_year = data["date"].dt.day_of_year
 
     data["month"] = data["date"].dt.month
     data["day_of_year"] = day_of_year
