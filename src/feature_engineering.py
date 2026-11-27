@@ -108,3 +108,42 @@ def add_domain_informed_features(df):
     )
 
     return data
+
+
+
+
+
+def add_rolling_variability_features(
+    df,
+    features=(
+        "5cm_soli_moist",
+        "potential_water_deficit",
+        "vapor_pressure_deficit",
+    ),
+    windows=(7, 14),
+):
+    """
+    Generate rolling standard deviation features.
+
+    Rolling windows use only previous observations and are calculated
+    separately within each year to avoid temporal leakage.
+    """
+    data = df.copy()
+    year_groups = data["date"].dt.year
+
+    for feature in features:
+        for window in windows:
+            feature_name = f"{feature}_rolling_std_{window}"
+
+            data[feature_name] = (
+                data.groupby(year_groups)[feature]
+                .transform(
+                    lambda series: (
+                        series.shift(1)
+                        .rolling(window=window, min_periods=window)
+                        .std()
+                    )
+                )
+            )
+
+    return data
