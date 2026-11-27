@@ -68,3 +68,43 @@ def add_calendar_features(df):
     )
 
     return data
+
+
+
+
+def add_domain_informed_features(df):
+    """
+    Generate domain-informed climate features.
+
+    Features are derived from available climate variables.
+    Temporal differences use observations from the same year.
+    """
+
+    data = df.copy()
+
+    year_groups = data["date"].dt.year
+
+    # 1. Soil moisture change over the previous 7 days
+    data["soil_moisture_change_7d"] = (
+        data.groupby(year_groups)["5cm_soli_moist"]
+        .diff(7)
+    )
+
+    # 2. Potential water deficit change over the previous 7 days
+    data["water_deficit_change_7d"] = (
+        data.groupby(year_groups)["potential_water_deficit"]
+        .diff(7)
+    )
+
+    # 3. Temperature and dew point spread
+    data["temperature_dewpoint_spread"] = (
+        data["max_temp"] - data["mean_dew_point_temp"]
+    )
+
+    # 4. SST contrast between Indian Ocean and Cameroon
+    data["sst_indian_cameroon_contrast"] = (
+        data["sst_indian_ocean_mean_temperature_celsius"]
+        - data["sst_cameroon_mean_temperature_celsius"]
+    )
+
+    return data
